@@ -1,0 +1,93 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const pathname = Astro.url.pathname;
+
+const navLinks = [
+  { href: '/', label: 'Dashboard' },
+  { href: '/simulation', label: 'What-If Simulation' },
+  { href: '/timeline', label: 'Timeline' },
+];
+
+function isActive(href: string) {
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(href);
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="CityShield GIS — RAKSHAK-GEO Flood Response Intelligence" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>🛡️</text></svg>" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <!-- Geist font via Vercel CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <header class="fixed top-0 inset-x-0 z-50 bg-canvas/90 backdrop-blur border-b border-hairline">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2.5 shrink-0">
+          <span class="text-base font-semibold text-ink tracking-tight">RAKSHAK<span class="text-mute font-normal">-GEO</span></span>
+        </a>
+
+        <!-- Nav links -->
+        <div class="flex items-center gap-1">
+          {navLinks.map(({ href, label }) => (
+            <a
+              href={href}
+              class={[
+                'px-3 py-1.5 text-sm rounded-full transition-colors',
+                isActive(href)
+                  ? 'text-ink font-medium bg-hairline-soft'
+                  : 'text-body hover:text-ink hover:bg-hairline-soft',
+              ].join(' ')}
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+
+        <!-- Right pill -->
+        <div class="shrink-0">
+          <span class="text-xs font-mono text-mute px-2.5 py-1 border border-hairline rounded-full bg-canvas-elevated hidden sm:inline-flex">
+            v1.0-alpha
+          </span>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Page content with top-padding to clear the fixed nav -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-20 pb-16 min-h-screen">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-hairline bg-canvas">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-mute">
+        <div class="flex items-center gap-4">
+          <span>RAKSHAK-GEO</span>
+          <span class="text-hairline">·</span>
+          <span>CityShield GIS</span>
+          <span class="text-hairline">·</span>
+          <span>Phase 1 — T-019</span>
+        </div>
+        <div class="font-mono">FastAPI · Rasterio · Shapely · PostGIS</div>
+      </div>
+    </footer>
+  </body>
+</html>
