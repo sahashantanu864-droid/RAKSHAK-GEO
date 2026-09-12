@@ -16,12 +16,12 @@ class OptimizationGoal(str, Enum):
 
 
 class ResourceQuantity(BaseModel):
-    """Resource inventory counts by resource type."""
-    ambulances: int = Field(default=0, ge=0, description="Emergency medical transport units")
-    rescue_boats: int = Field(default=0, ge=0, description="Water rescue crafts")
-    food_packets: int = Field(default=0, ge=0, description="Ration and nutrition supply packs")
-    medical_kits: int = Field(default=0, ge=0, description="First aid and trauma care kits")
-    personnel: int = Field(default=0, ge=0, description="Emergency response personnel count")
+    """Resource inventory counts by resource type with strict boundary guards."""
+    ambulances: int = Field(default=0, ge=0, le=10_000_000, description="Emergency medical transport units")
+    rescue_boats: int = Field(default=0, ge=0, le=10_000_000, description="Water rescue crafts")
+    food_packets: int = Field(default=0, ge=0, le=10_000_000, description="Ration and nutrition supply packs")
+    medical_kits: int = Field(default=0, ge=0, le=10_000_000, description="First aid and trauma care kits")
+    personnel: int = Field(default=0, ge=0, le=10_000_000, description="Emergency response personnel count")
     extra: Dict[str, int] = Field(default_factory=dict, description="Additional custom resource items")
 
     def to_dict(self) -> Dict[str, int]:
@@ -33,15 +33,25 @@ class ResourceQuantity(BaseModel):
             "medical_kits": self.medical_kits,
             "personnel": self.personnel,
         }
-        base.update(self.extra)
+        # Sanitize extra counts
+        sanitized_extra = {
+            str(k)[:32]: max(0, min(int(v), 10_000_000))
+            for k, v in self.extra.items()
+            if isinstance(v, (int, float))
+        }
+        base.update(sanitized_extra)
         return base
 
     @classmethod
     def from_dict(cls, data: Dict[str, int]) -> "ResourceQuantity":
         """Instantiate ResourceQuantity from a dictionary of resource counts."""
         standard_keys = {"ambulances", "rescue_boats", "food_packets", "medical_kits", "personnel"}
-        standard_args = {k: data.get(k, 0) for k in standard_keys}
-        extra_args = {k: v for k, v in data.items() if k not in standard_keys}
+        standard_args = {k: max(0, min(int(data.get(k, 0)), 10_000_000)) for k in standard_keys}
+        extra_args = {
+            str(k)[:32]: max(0, min(int(v), 10_000_000))
+            for k, v in data.items()
+            if k not in standard_keys and isinstance(v, (int, float))
+        }
         return cls(**standard_args, extra=extra_args)
 
 
@@ -57,11 +67,11 @@ class ResourceItemAllocation(BaseModel):
 
 class ZoneDemand(BaseModel):
     """Need/demand assessment for a specific GIS disaster zone."""
-    zone_id: str = Field(..., description="Unique zone identifier, e.g. 'ZONE-AHM-01'")
-    zone_name: str = Field(..., description="Human-readable zone name")
+    zone_id: str = Field(..., max_length=64, description="Unique zone identifier, e.g. 'ZONE-AHM-01'")
+    zone_name: str = Field(..., max_length=128, description="Human-readable zone name")
     priority: int = Field(default=5, ge=1, le=10, description="Zone priority level (1=Low, 10=Highest)")
     severity_score: float = Field(default=1.0, ge=0.0, le=10.0, description="Disaster impact/severity score (0-10)")
-    population_at_risk: int = Field(default=0, ge=0, description="Estimated affected population count")
+    population_at_risk: int = Field(default=0, ge=0, le=50_000_000, description="Estimated affected population count")
     demand: ResourceQuantity = Field(..., description="Required resource quantities (gross need)")
     local_capacity: Optional[ResourceQuantity] = Field(
         default=None, description="Existing on-site resources already in this zone"
@@ -73,16 +83,16 @@ class ZoneDemand(BaseModel):
 
 class OptimizationConstraint(BaseModel):
     """Constraints governing resource dispatch and routing."""
-    max_travel_time_minutes: Optional[float] = Field(default=60.0, ge=0.0)
+    max_travel_time_minutes: Optional[float] = Field(default=60.0, ge=0.0, le=1440.0)
     reserve_margin_percent: float = Field(default=0.0, ge=0.0, le=100.0, description="Reserve buffer percentage")
 
 
 class ResourceOptimizationRequest(BaseModel):
     """Request payload for resource optimization allocation."""
-    incident_id: str = Field(default="INC-DEMO-001", description="Incident reference identifier")
+    incident_id: str = Field(default="INC-DEMO-001", max_length=64, description="Incident reference identifier")
     objective: OptimizationGoal = Field(default=OptimizationGoal.PRIORITIZE_CRITICAL_ZONES)
     available_resources: ResourceQuantity = Field(..., description="Total available stockpile across depots")
-    zones: List[ZoneDemand] = Field(..., description="List of target disaster zones with unmet demand")
+    zones: List[ZoneDemand] = Field(..., max_length=500, description="List of target disaster zones with unmet demand")
     constraints: Optional[OptimizationConstraint] = Field(default_factory=OptimizationConstraint)
 
 

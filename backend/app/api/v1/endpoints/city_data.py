@@ -42,7 +42,7 @@ def get_database_status() -> Dict[str, Any]:
     description="Returns aggregate counts and metadata across wards, buildings, hospitals, shelters, roads, and population.",
 )
 def get_inventory_summary(
-    city_id: str = Query("AHMEDABAD", description="Target city identifier"),
+    city_id: str = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Target city identifier"),
 ) -> CityGISInventorySummary:
     """Return an executive summary of indexed city spatial layers."""
     return CityGISRepository.get_inventory_summary(city_id=city_id)
@@ -56,7 +56,7 @@ def get_inventory_summary(
     description="Retrieves administrative ward polygons compatible with GIS impact and optimization services.",
 )
 def get_wards(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
 ) -> List[WardZoneGeometry]:
     """Retrieve municipal ward boundary geometries."""
     return CityGISRepository.get_ward_geometries(city_id=city_id)
@@ -70,8 +70,8 @@ def get_wards(
     description="Retrieves structure footprints and critical facility geometries, optionally filtered by zone.",
 )
 def get_buildings(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
-    zone_id: Optional[str] = Query(None, description="Optional zone ID filter"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
+    zone_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Optional zone ID filter"),
 ) -> List[BuildingFootprint]:
     """Retrieve building and infrastructure footprints."""
     return CityGISRepository.get_building_footprints(city_id=city_id, zone_id=zone_id)
@@ -85,8 +85,8 @@ def get_buildings(
     description="Retrieves hospitals, trauma centers, and medical posts with bed capacities.",
 )
 def get_hospitals(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
-    zone_id: Optional[str] = Query(None, description="Optional zone ID filter"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
+    zone_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Optional zone ID filter"),
 ) -> List[HospitalFacility]:
     """Retrieve hospital facilities."""
     return CityGISRepository.get_hospitals(city_id=city_id, zone_id=zone_id)
@@ -100,8 +100,8 @@ def get_hospitals(
     description="Retrieves disaster relief camps and emergency shelters with occupancy capacities.",
 )
 def get_shelters(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
-    zone_id: Optional[str] = Query(None, description="Optional zone ID filter"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
+    zone_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Optional zone ID filter"),
 ) -> List[ShelterFacility]:
     """Retrieve evacuation shelter facilities."""
     return CityGISRepository.get_shelters(city_id=city_id, zone_id=zone_id)
@@ -115,8 +115,8 @@ def get_shelters(
     description="Retrieves road network segments with geometry and evacuation corridor designations.",
 )
 def get_roads(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
-    zone_id: Optional[str] = Query(None, description="Optional zone ID filter"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
+    zone_id: Optional[str] = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Optional zone ID filter"),
     evacuation_only: bool = Query(False, description="Filter for designated emergency evacuation corridors only"),
 ) -> List[RoadSegment]:
     """Retrieve road network links."""
@@ -131,7 +131,7 @@ def get_roads(
     description="Retrieves ward-level resident population counts.",
 )
 def get_population(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
 ) -> Dict[str, int]:
     """Retrieve zone population mapping."""
     return CityGISRepository.get_population(city_id=city_id)
@@ -145,7 +145,7 @@ def get_population(
     description="Retrieves total available emergency stockpile quantities across municipal depots.",
 )
 def get_resources(
-    city_id: Optional[str] = Query("AHMEDABAD", description="Filter by city identifier"),
+    city_id: Optional[str] = Query("AHMEDABAD", max_length=64, pattern=r"^[A-Za-z0-9_-]+$", description="Filter by city identifier"),
 ) -> ResourceQuantity:
     """Retrieve depot resource quantities."""
     return CityGISRepository.get_resources(city_id=city_id)

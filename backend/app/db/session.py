@@ -23,14 +23,18 @@ def check_database_connectivity() -> Dict[str, Any]:
         if result == 0:
             is_reachable = True
         else:
-            error_message = f"Connection refused on {settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT} (errno: {result})"
+            error_message = (
+                "Database unreachable."
+                if settings.is_production
+                else f"Connection refused on {settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT} (errno: {result})"
+            )
     except Exception as exc:
-        error_message = str(exc)
+        error_message = "Database connection check failed." if settings.is_production else str(exc)
 
     return {
         "database_engine": "PostgreSQL with PostGIS Spatial Extension",
-        "configured_host": settings.POSTGRES_SERVER,
-        "configured_port": settings.POSTGRES_PORT,
+        "configured_host": settings.POSTGRES_SERVER if not settings.is_production else "protected",
+        "configured_port": settings.POSTGRES_PORT if not settings.is_production else 5432,
         "configured_database": settings.POSTGRES_DB,
         "is_connected": is_reachable,
         "postgis_extension_active": is_reachable and settings.POSTGIS_ENABLED,
@@ -38,7 +42,7 @@ def check_database_connectivity() -> Dict[str, Any]:
         "notes": (
             "Live PostGIS instance active."
             if is_reachable
-            else "Live PostGIS instance is NOT reachable on localhost:5432. "
+            else "Live PostGIS instance is NOT reachable. "
                  "The system is operating with deterministic in-memory/seed GIS data fallback."
         ),
         "error": error_message,

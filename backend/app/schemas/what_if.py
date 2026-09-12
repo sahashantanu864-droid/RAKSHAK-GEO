@@ -18,12 +18,12 @@ from app.schemas.optimization import (
 
 
 class ResourceSignedQuantity(BaseModel):
-    """Signed resource quantity delta (supports positive, zero, or negative numbers)."""
-    ambulances: int = Field(default=0, description="Change in emergency medical transport units")
-    rescue_boats: int = Field(default=0, description="Change in water rescue crafts")
-    food_packets: int = Field(default=0, description="Change in ration supply packs")
-    medical_kits: int = Field(default=0, description="Change in trauma care kits")
-    personnel: int = Field(default=0, description="Change in response personnel count")
+    """Signed resource quantity delta (supports positive, zero, or negative numbers with safety bounds)."""
+    ambulances: int = Field(default=0, ge=-10_000_000, le=10_000_000, description="Change in emergency medical transport units")
+    rescue_boats: int = Field(default=0, ge=-10_000_000, le=10_000_000, description="Change in water rescue crafts")
+    food_packets: int = Field(default=0, ge=-10_000_000, le=10_000_000, description="Change in ration supply packs")
+    medical_kits: int = Field(default=0, ge=-10_000_000, le=10_000_000, description="Change in trauma care kits")
+    personnel: int = Field(default=0, ge=-10_000_000, le=10_000_000, description="Change in response personnel count")
     extra: Dict[str, int] = Field(default_factory=dict, description="Change in additional custom resource items")
 
     def to_dict(self) -> Dict[str, int]:
@@ -35,21 +35,30 @@ class ResourceSignedQuantity(BaseModel):
             "medical_kits": self.medical_kits,
             "personnel": self.personnel,
         }
-        base.update(self.extra)
+        sanitized_extra = {
+            str(k)[:32]: max(-10_000_000, min(int(v), 10_000_000))
+            for k, v in self.extra.items()
+            if isinstance(v, (int, float))
+        }
+        base.update(sanitized_extra)
         return base
 
     @classmethod
     def from_dict(cls, data: Dict[str, int]) -> "ResourceSignedQuantity":
         """Instantiate ResourceSignedQuantity from a dictionary of signed counts."""
         standard_keys = {"ambulances", "rescue_boats", "food_packets", "medical_kits", "personnel"}
-        standard_args = {k: data.get(k, 0) for k in standard_keys}
-        extra_args = {k: v for k, v in data.items() if k not in standard_keys}
+        standard_args = {k: max(-10_000_000, min(int(data.get(k, 0)), 10_000_000)) for k in standard_keys}
+        extra_args = {
+            str(k)[:32]: max(-10_000_000, min(int(v), 10_000_000))
+            for k, v in data.items()
+            if k not in standard_keys and isinstance(v, (int, float))
+        }
         return cls(**standard_args, extra=extra_args)
 
 
 class ZoneModifier(BaseModel):
     """Explicit modifiers to apply to a specific disaster zone in simulation."""
-    zone_id: str = Field(..., description="Target zone identifier to modify")
+    zone_id: str = Field(..., max_length=64, description="Target zone identifier to modify")
     demand_deltas: Optional[Dict[str, int]] = Field(
         default=None,
         description="Relative changes to gross demand (e.g. {'ambulances': 5, 'food_packets': -200})",
@@ -78,6 +87,7 @@ class ScenarioChanges(BaseModel):
     """Specification of deterministic parameter shifts for the What-If simulation."""
     description: Optional[str] = Field(
         default="Emergency parameter shift simulation",
+        max_length=500,
         description="Human-readable scenario description",
     )
     available_resource_deltas: Optional[Dict[str, int]] = Field(
@@ -90,6 +100,7 @@ class ScenarioChanges(BaseModel):
     )
     zone_changes: List[ZoneModifier] = Field(
         default_factory=list,
+        max_length=500,
         description="List of specific zone modifications to apply",
     )
     objective_override: Optional[OptimizationGoal] = Field(
@@ -100,7 +111,7 @@ class ScenarioChanges(BaseModel):
 
 class WhatIfSimulateRequest(BaseModel):
     """Request payload for running a What-If disaster response simulation."""
-    incident_id: str = Field(default="INC-WHATIF-001", description="Incident reference identifier")
+    incident_id: str = Field(default="INC-WHATIF-001", max_length=64, description="Incident reference identifier")
     objective: OptimizationGoal = Field(
         default=OptimizationGoal.PRIORITIZE_CRITICAL_ZONES,
         description="Baseline objective function",
@@ -109,7 +120,7 @@ class WhatIfSimulateRequest(BaseModel):
         ..., description="Baseline available resource capacity across depots"
     )
     base_zones: List[ZoneDemand] = Field(
-        ..., description="Baseline target disaster zones with initial demand and capacity"
+        ..., max_length=500, description="Baseline target disaster zones with initial demand and capacity"
     )
     constraints: Optional[OptimizationConstraint] = Field(
         default_factory=OptimizationConstraint,

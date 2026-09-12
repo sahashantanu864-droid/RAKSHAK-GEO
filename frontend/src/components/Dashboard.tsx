@@ -1,177 +1,335 @@
 import React, { useEffect, useState } from 'react';
+import { CommandHeader } from './CommandHeader';
+import { OperationalStatsRow } from './OperationalStatsRow';
+import { GISMap } from './GISMap';
+import { ZoneDetailPanel } from './ZoneDetailPanel';
+import { ActiveAlertsPanel } from './ActiveAlertsPanel';
 import { Card } from './ui/Card';
-import { Button } from './ui/Button';
-import { fetchCitySummary } from '../lib/api';
-
-type CityData = {
-  total_wards?: number;
-  total_buildings?: number;
-  total_hospitals?: number;
-  total_shelters?: number;
-  total_roads?: number;
-};
+import type {
+  WardZone,
+  HospitalMarker,
+  ShelterMarker,
+  EmergencyUnitMarker,
+  RoadSegmentMarker,
+  IncidentAlert,
+  OperationalSummary,
+  FloodIncident,
+} from '../lib/types';
+import {
+  FLOOD_INCIDENTS,
+  INITIAL_OPERATIONAL_SUMMARY,
+} from '../lib/mockData';
+import {
+  checkBackendHealth,
+  fetchCitySummary,
+  fetchWards,
+  fetchHospitals,
+  fetchShelters,
+  fetchRoads,
+  fetchDepotResources,
+  type HealthStatus,
+} from '../lib/api';
 
 export const Dashboard: React.FC = () => {
-  const [data, setData] = useState<CityData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+  const [activeIncident, setActiveIncident] = useState<FloodIncident>(FLOOD_INCIDENTS[0]);
+  const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [summary, setSummary] = useState<OperationalSummary>(FLOOD_INCIDENTS[0].summary);
+  const [zones, setZones] = useState<WardZone[]>(FLOOD_INCIDENTS[0].zones);
+  const [hospitals, setHospitals] = useState<HospitalMarker[]>(FLOOD_INCIDENTS[0].hospitals);
+  const [shelters, setShelters] = useState<ShelterMarker[]>(FLOOD_INCIDENTS[0].shelters);
+  const [units, setUnits] = useState<EmergencyUnitMarker[]>(FLOOD_INCIDENTS[0].units);
+  const [roads, setRoads] = useState<RoadSegmentMarker[]>(FLOOD_INCIDENTS[0].roads);
+  const [alerts, setAlerts] = useState<IncidentAlert[]>(FLOOD_INCIDENTS[0].alerts);
+
+  const [selectedZone, setSelectedZone] = useState<WardZone | null>(FLOOD_INCIDENTS[0].zones[0] ?? null);
+  const [focusedCoords, setFocusedCoords] = useState<[number, number] | null>(null);
+  const [activeTab, setActiveTab] = useState<'ZONE_INSPECTOR' | 'ALERTS'>('ZONE_INSPECTOR');
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const handleSelectIncident = (incident: FloodIncident) => {
+    setActiveIncident(incident);
+    setSelectedZone(incident.zones[0] ?? null);
+    setFocusedCoords(null);
+    setSummary(incident.summary);
+    setZones(incident.zones);
+    setHospitals(incident.hospitals);
+    setShelters(incident.shelters);
+    setUnits(incident.units);
+    setRoads(incident.roads);
+    setAlerts(incident.alerts);
+
+    // If switching back to the real backend incident and system is online, hydrate live
+    if (incident.is_real_backend_dataset && health?.online) {
+      loadData(incident);
+    }
+  };
+
+  const loadData = async (targetIncident?: FloodIncident) => {
+    const currentIncident = targetIncident ?? activeIncident;
+    setRefreshing(true);
+
+    // 1. Live health check
+    const healthStatus = await checkBackendHealth(2000);
+    setHealth(healthStatus);
+
+    // 2. If backend is online AND the active incident is the real PostGIS dataset, hydrate
+    if (healthStatus.online && currentIncident.is_real_backend_dataset) {
+      try {
+        const [wardsData, hospitalsData, sheltersData, roadsData, depotData] =
+          await Promise.allSettled([
+            fetchWards(),
+            fetchHospitals(),
+            fetchShelters(),
+            fetchRoads(),
+            fetchDepotResources(),
+          ]);
+
+        // Hydrate hospitals if valid
+        if (
+          hospitalsData.status === 'fulfilled' &&
+          Array.isArray(hospitalsData.value) &&
+          hospitalsData.value.length > 0
+        ) {
+          const mappedHosp: HospitalMarker[] = hospitalsData.value.map((h: any) => ({
+            hospital_id: h.hospital_id,
+            name: h.name,
+            city_id: h.city_id,
+            zone_id: h.zone_id,
+            bed_capacity: h.bed_capacity,
+            icu_beds: h.icu_beds,
+            has_emergency_ward: h.has_emergency_ward,
+            status: h.has_emergency_ward ? 'WATER_INGRESS' : 'OPERATIONAL',
+            coordinates: h.geometry?.coordinates ?? [72.572, 23.035],
+          }));
+          setHospitals(mappedHosp);
+        }
+
+        // Hydrate shelters if valid
+        if (
+          sheltersData.status === 'fulfilled' &&
+          Array.isArray(sheltersData.value) &&
+          sheltersData.value.length > 0
+        ) {
+          const mappedShelters: ShelterMarker[] = sheltersData.value.map((s: any) => ({
+            shelter_id: s.shelter_id,
+            name: s.name,
+            city_id: s.city_id,
+            zone_id: s.zone_id,
+            occupancy_capacity: s.occupancy_capacity,
+            current_occupancy: Math.round(s.occupancy_capacity * 0.75),
+            has_generator: s.has_generator,
+            potable_water_liters: s.potable_water_liters,
+            status: s.occupancy_capacity > 600 ? 'NEAR_CAPACITY' : 'OPEN',
+            coordinates: s.geometry?.coordinates ?? [72.555, 23.045],
+          }));
+          setShelters(mappedShelters);
+        }
+
+        // Hydrate depot stockpile counts
+        if (depotData.status === 'fulfilled' && depotData.value) {
+          setSummary((prev) => ({
+            ...prev,
+            depot_resources: {
+              ambulances: depotData.value.ambulances ?? prev.depot_resources.ambulances,
+              rescue_boats: depotData.value.rescue_boats ?? prev.depot_resources.rescue_boats,
+              food_packets: depotData.value.food_packets ?? prev.depot_resources.food_packets,
+              medical_kits: depotData.value.medical_kits ?? prev.depot_resources.medical_kits,
+              personnel: depotData.value.personnel ?? prev.depot_resources.personnel,
+            },
+          }));
+        }
+      } catch (err) {
+        console.warn('Backend hydration failed, using high-fidelity fallback demo data', err);
+      }
+    }
+
+    setRefreshing(false);
+  };
 
   useEffect(() => {
-    // First ping health endpoint
-    fetch('http://127.0.0.1:8000/api/health')
-      .then((res) => {
-        setBackendOnline(res.ok);
-        return fetchCitySummary();
-      })
-      .then(setData)
-      .catch(() => {
-        setBackendOnline(false);
-        // Still show the UI — just without live data
-      })
-      .finally(() => setLoading(false));
+    loadData();
+
+    // Auto-poll health every 15 seconds to keep the live badge accurate
+    const interval = setInterval(async () => {
+      const h = await checkBackendHealth(2000);
+      setHealth(h);
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
+  const handleSelectZone = (zone: WardZone) => {
+    setSelectedZone(zone);
+    setActiveTab('ZONE_INSPECTOR');
+  };
+
+  const handleSelectAlert = (alert: IncidentAlert) => {
+    if (alert.coordinates) {
+      setFocusedCoords(alert.coordinates);
+    }
+    const matchingZone = zones.find((z) => z.zone_id === alert.zone_id);
+    if (matchingZone) {
+      setSelectedZone(matchingZone);
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <header className="relative py-16 md:py-24 overflow-hidden">
-        {/* Mesh gradient — layered radial gradients approximating the Geist hero */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 50% at 20% 40%, rgba(80,227,194,0.15) 0%, transparent 70%), radial-gradient(ellipse 50% 60% at 80% 20%, rgba(121,40,202,0.12) 0%, transparent 70%), radial-gradient(ellipse 40% 50% at 50% 80%, rgba(0,112,243,0.12) 0%, transparent 70%)',
-          }}
-        />
-        <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 border border-hairline rounded-full bg-canvas-elevated text-xs font-mono text-mute uppercase tracking-widest">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-success inline-block"
-            style={{ backgroundColor: backendOnline === false ? '#ee0000' : '#0070f3' }}
-          />
-          {backendOnline === false ? 'Backend Offline' : 'RAKSHAK-GEO v1.0'}
-        </div>
-        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4 text-ink" style={{ letterSpacing: '-0.06em' }}>
-          CityShield Global
-          <br />
-          Intelligence
-        </h1>
-        <p className="text-lg text-body max-w-xl leading-relaxed">
-          Real-time flood impact analysis, automated resource optimization, and predictive what-if scenarios — for emergency response coordinators.
-        </p>
-        <div className="flex gap-3 mt-8 flex-wrap">
-          <Button variant="primary" size="lg" onClick={() => (window.location.href = '/simulation')}>
-            Launch Simulator
-          </Button>
-          <Button variant="secondary" size="lg" onClick={() => (window.location.href = '/timeline')}>
-            View Timeline
-          </Button>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Tactical Incident Command Header with Selectable Active Flood Area */}
+      <CommandHeader
+        health={health}
+        onRefresh={() => loadData()}
+        refreshing={refreshing}
+        activeIncident={activeIncident}
+        incidents={FLOOD_INCIDENTS}
+        onSelectIncident={handleSelectIncident}
+      />
 
-      {/* Backend status banner */}
-      {backendOnline === false && (
-        <div className="border border-hairline rounded-md p-4 bg-canvas-elevated">
-          <p className="text-sm font-medium text-body">
-            <span className="font-mono text-xs mr-2 px-1.5 py-0.5 rounded" style={{ background: '#ffefcf', color: '#ab570a' }}>
-              OFFLINE
-            </span>
-            FastAPI backend is not running. Start it with{' '}
-            <code className="font-mono text-xs bg-hairline-soft px-1.5 py-0.5 rounded">
-              uvicorn app.main:app --host 127.0.0.1 --port 8000
-            </code>{' '}
-            from the <code className="font-mono text-xs bg-hairline-soft px-1.5 py-0.5 rounded">backend/</code> directory.
-          </p>
-        </div>
-      )}
+      {/* Operational Statistics Row */}
+      <OperationalStatsRow
+        summary={summary}
+        backendOnline={health?.online === true && activeIncident.is_real_backend_dataset}
+      />
 
-      {/* City Stats */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 rounded-md border border-hairline bg-canvas-elevated animate-pulse" />
-          ))}
-        </div>
-      ) : data ? (
-        <>
-          <div>
-            <p className="text-xs font-mono uppercase tracking-widest text-mute mb-4">City Overview</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: 'Wards', value: data.total_wards },
-                { label: 'Buildings', value: data.total_buildings },
-                { label: 'Hospitals', value: data.total_hospitals },
-                { label: 'Shelters', value: data.total_shelters },
-              ].map(({ label, value }) => (
-                <Card key={label}>
-                  <p className="text-xs font-mono uppercase tracking-widest text-mute mb-2">{label}</p>
-                  <p className="text-3xl font-semibold text-ink">{value ?? '—'}</p>
-                </Card>
-              ))}
+      {/* Main Operational Command Workspace: Map + Tactical Inspector Rail */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left / Center: Primary GIS Map (Centerpiece) */}
+        <div className="col-span-1 lg:col-span-8 xl:col-span-8 2xl:col-span-9 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  activeIncident.status === 'ACTIVE_FLOOD'
+                    ? 'bg-red-600 animate-pulse'
+                    : 'bg-amber-500'
+                }`}
+              ></span>
+              <h2 className="text-sm font-semibold uppercase tracking-wider font-mono text-ink">
+                Cartographic Operational Surface // {activeIncident.short_label}
+              </h2>
+            </div>
+            <div className="text-xs font-mono text-mute hidden sm:block">
+              Coordinates: {activeIncident.center_coordinates[1].toFixed(3)}° N,{' '}
+              {activeIncident.center_coordinates[0].toFixed(3)}° E ({activeIncident.region})
             </div>
           </div>
-        </>
-      ) : null}
 
-      {/* Feature cards */}
-      <div>
-        <p className="text-xs font-mono uppercase tracking-widest text-mute mb-4">Operations</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card elevated className="group hover:border-ink transition-colors cursor-pointer" onClick={() => (window.location.href = '/simulation')}>
-            <div className="text-2xl mb-4">⚡</div>
-            <h3 className="font-semibold text-ink mb-1">What-If Simulation</h3>
-            <p className="text-sm text-body leading-relaxed">
-              Run counterfactual scenarios — cut stockpiles, add zones, destroy clinics — and instantly see optimized allocation shifts.
-            </p>
-            <p className="text-xs font-mono text-mute mt-4 group-hover:text-link transition-colors">
-              /api/v1/what-if/simulate →
-            </p>
-          </Card>
+          <GISMap
+            zones={zones}
+            hospitals={hospitals}
+            shelters={shelters}
+            units={units}
+            roads={roads}
+            alerts={alerts}
+            selectedZone={selectedZone}
+            onSelectZone={handleSelectZone}
+            focusedCoordinates={focusedCoords}
+            centerCoordinates={activeIncident.center_coordinates}
+            zoomLevel={activeIncident.zoom_level}
+            floodCorridor={activeIncident.flood_corridor}
+            incidentName={activeIncident.name}
+            isRealBackendDataset={activeIncident.is_real_backend_dataset}
+          />
+        </div>
 
-          <Card elevated className="group hover:border-ink transition-colors cursor-pointer" onClick={() => (window.location.href = '/timeline')}>
-            <div className="text-2xl mb-4">📈</div>
-            <h3 className="font-semibold text-ink mb-1">Response Gap Timeline</h3>
-            <p className="text-sm text-body leading-relaxed">
-              Chronological view of evolving flood extents, demand projections, and resource fulfillment gaps across time horizons.
-            </p>
-            <p className="text-xs font-mono text-mute mt-4 group-hover:text-link transition-colors">
-              /api/v1/future-gap/timeline →
-            </p>
-          </Card>
+        {/* Right / Rail: Dual-Tab Tactical Inspector (Zone Details & Alerts) */}
+        <div className="col-span-1 lg:col-span-4 xl:col-span-4 2xl:col-span-3 space-y-4">
+          {/* Rail Navigation Tabs */}
+          <div className="flex items-center gap-2 p-1 bg-canvas-elevated border border-hairline rounded-lg text-xs font-mono">
+            <button
+              onClick={() => setActiveTab('ZONE_INSPECTOR')}
+              className={`flex-1 py-1.5 px-3 rounded-md transition-all font-semibold cursor-pointer ${
+                activeTab === 'ZONE_INSPECTOR'
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'text-body hover:text-ink hover:bg-hairline-soft'
+              }`}
+            >
+              Zone Inspector {selectedZone ? '●' : ''}
+            </button>
+            <button
+              onClick={() => setActiveTab('ALERTS')}
+              className={`flex-1 py-1.5 px-3 rounded-md transition-all font-semibold cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'ALERTS'
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'text-body hover:text-ink hover:bg-hairline-soft'
+              }`}
+            >
+              <span>Tactical Alerts</span>
+              <span className="px-1.5 py-0.2 rounded-full bg-red-600 text-white text-[10px]">
+                {alerts.length}
+              </span>
+            </button>
+          </div>
 
-          <Card elevated className="hover:border-ink transition-colors">
-            <div className="text-2xl mb-4">🗺️</div>
-            <h3 className="font-semibold text-ink mb-1">GIS Impact Analysis</h3>
-            <p className="text-sm text-body leading-relaxed">
-              2D spatial intersection of flood extents against city ward boundaries, roads, and building footprints.
-            </p>
-            <p className="text-xs font-mono text-mute mt-4">
-              /api/v1/gis/impact →
-            </p>
-          </Card>
+          {/* Active Tab Panel */}
+          <div className="h-[650px]">
+            {activeTab === 'ZONE_INSPECTOR' ? (
+              selectedZone ? (
+                <ZoneDetailPanel
+                  zone={selectedZone}
+                  onClose={() => setSelectedZone(null)}
+                  onLaunchSimulation={(zoneId) => {
+                    window.location.href = `/simulation?zone=${zoneId}`;
+                  }}
+                />
+              ) : (
+                <Card className="h-full flex flex-col items-center justify-center text-center p-8 border-dashed">
+                  <div className="text-3xl mb-2">🗺️</div>
+                  <h4 className="font-semibold text-sm text-ink mb-1">No Zone Selected</h4>
+                  <p className="text-xs text-mute max-w-xs leading-relaxed">
+                    Click any ward polygon on the GIS map to inspect inundated areas, affected population, facilities, and response gaps.
+                  </p>
+                </Card>
+              )
+            ) : (
+              <ActiveAlertsPanel
+                alerts={alerts}
+                onSelectAlert={handleSelectAlert}
+              />
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Pipeline callout */}
-      <Card className="md:col-span-2">
-        <p className="text-xs font-mono uppercase tracking-widest text-mute mb-4">End-to-End Pipeline</p>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-body font-mono">
-          {[
-            'Satellite GeoTIFF',
-            'NDWI Detection',
-            'Water Masking',
-            'GeoJSON Vector',
-            'GIS Intersection',
-            'Response Gap',
-            'Resource Dispatch',
-          ].map((step, i, arr) => (
-            <React.Fragment key={step}>
-              <span className="px-2.5 py-1 border border-hairline rounded bg-canvas-elevated text-xs text-ink">
-                {step}
+      {/* Bottom Pipeline Status Strip */}
+      <Card className="border border-hairline bg-canvas-elevated">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div className="text-[11px] font-mono uppercase tracking-widest text-mute mb-1">
+              End-to-End Decision Pipeline Architecture
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-body">
+              <span className="px-2 py-0.5 rounded border border-hairline bg-canvas text-ink">
+                1. Satellite GeoTIFF
               </span>
-              {i < arr.length - 1 && <span className="text-hairline">→</span>}
-            </React.Fragment>
-          ))}
+              <span className="text-mute">→</span>
+              <span className="px-2 py-0.5 rounded border border-hairline bg-canvas text-ink">
+                2. NDWI Water Inversion
+              </span>
+              <span className="text-mute">→</span>
+              <span className="px-2 py-0.5 rounded border border-hairline bg-canvas text-ink">
+                3. Permanent Masking
+              </span>
+              <span className="text-mute">→</span>
+              <span className="px-2 py-0.5 rounded border border-hairline bg-canvas text-ink">
+                4. GeoJSON Polygonizer
+              </span>
+              <span className="text-mute">→</span>
+              <span className="px-2 py-0.5 rounded border border-hairline bg-canvas text-ink">
+                5. PostGIS Intersection
+              </span>
+              <span className="text-mute">→</span>
+              <span className="px-2 py-0.5 rounded border border-hairline bg-primary text-on-primary font-semibold">
+                6. Dynamic Resource Optimization
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-mono text-mute">
+              Connected Services: <strong>FastAPI / Shapely / PostGIS / PyProj / ISRO Bhuvan WMS</strong>
+            </span>
+          </div>
         </div>
       </Card>
     </div>

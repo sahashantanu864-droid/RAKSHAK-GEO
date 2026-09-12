@@ -352,3 +352,40 @@ def test_gis_original_input_not_mutated():
     # Check that original input objects are identical
     assert ward.model_dump() == orig_ward_dict
     assert bldg.model_dump() == orig_bldg_dict
+
+
+# -----------------------------------------------------------------------------
+# Test 10: ISRO Bhuvan status and proxy endpoints
+# -----------------------------------------------------------------------------
+def test_gis_isro_status_endpoint():
+    """Verify ISRO status endpoint returns service metadata and layer specifications."""
+    resp = client.get("/api/v1/gis/isro/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "ISRO" in data["service"]
+    assert "provider" in data
+    assert "wms_endpoint" in data
+    assert "attribution" in data
+    assert isinstance(data["supported_layers"], list)
+    assert len(data["supported_layers"]) >= 1
+
+
+def test_gis_isro_wms_proxy_endpoint():
+    """Verify ISRO WMS proxy safely returns valid image/png content without breaking."""
+    resp = client.get(
+        "/api/v1/gis/isro/wms",
+        params={
+            "service": "WMS",
+            "request": "GetMap",
+            "layers": "india3",
+            "bbox": "72.0,22.0,73.0,23.0",
+            "width": "256",
+            "height": "256",
+            "srs": "EPSG:4326",
+            "format": "image/png",
+        },
+    )
+    assert resp.status_code == 200
+    assert "image/png" in resp.headers.get("content-type", "")
+    assert len(resp.content) > 0
+

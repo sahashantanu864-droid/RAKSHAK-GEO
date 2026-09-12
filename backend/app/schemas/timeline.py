@@ -41,9 +41,10 @@ class TimeStepProjection(BaseModel):
     """Explicit deterministic state modifications applied at a specific time point."""
     time_offset_hours: float = Field(
         ge=0.0,
-        description="Time offset in hours from baseline (must be >= 0.0)",
+        le=168.0,
+        description="Time offset in hours from baseline (must be between 0.0 and 168.0 hours)",
     )
-    label: Optional[str] = Field(default=None, description="Descriptive label for this time point")
+    label: Optional[str] = Field(default=None, max_length=128, description="Descriptive label for this time point")
     available_resource_deltas: Optional[Dict[str, int]] = Field(
         default=None,
         description="Stockpile capacity changes effective at this time step",
@@ -54,29 +55,32 @@ class TimeStepProjection(BaseModel):
     )
     zone_modifications: List[ZoneModifier] = Field(
         default_factory=list,
+        max_length=500,
         description="Specific zone demand/capacity/priority shifts for this time step",
     )
 
 
 class FutureGapTimelineRequest(BaseModel):
     """Request payload to generate a Future Response Gap Timeline."""
-    incident_id: str = Field(default="INC-TIMELINE-001", description="Incident reference identifier")
+    incident_id: str = Field(default="INC-TIMELINE-001", max_length=64, description="Incident reference identifier")
     base_available_resources: ResourceQuantity = Field(
         ..., description="Initial available resource capacity across depots at T+0h"
     )
     base_zones: List[ZoneDemand] = Field(
-        ..., description="Baseline disaster zones evaluated at T+0h"
+        ..., max_length=500, description="Baseline disaster zones evaluated at T+0h"
     )
     time_horizons_hours: List[float] = Field(
         default=[0.0, 6.0, 12.0, 18.0, 24.0],
-        description="List of future time points in hours to evaluate (must be >= 0.0)",
+        description="List of future time points in hours to evaluate (must be between 0.0 and 168.0)",
     )
     step_projections: List[TimeStepProjection] = Field(
         default_factory=list,
+        max_length=100,
         description="Explicit discrete scenario adjustments mapped to specific time offsets",
     )
     hourly_rules: List[HourlyGrowthRule] = Field(
         default_factory=list,
+        max_length=100,
         description="Continuous deterministic growth/decay rules applied across time horizons",
     )
     run_optimization: bool = Field(
@@ -95,9 +99,14 @@ class FutureGapTimelineRequest(BaseModel):
     @field_validator("time_horizons_hours")
     @classmethod
     def validate_time_horizons(cls, v: List[float]) -> List[float]:
-        """Ensure time horizons are non-empty, non-negative, and properly ordered."""
+        """Ensure time horizons are non-empty, non-negative, properly bounded (<= 168h), and ordered."""
         if not v:
             raise ValueError("time_horizons_hours must contain at least one time offset.")
+        if len(v) > 50:
+            raise ValueError("time_horizons_hours cannot contain more than 50 time points.")
+        for h in v:
+            if h < 0.0 or h > 168.0:
+                raise ValueError(f"Time offset {h}h is outside the allowed bounds [0.0, 168.0].")
         for t in v:
             if t < 0.0:
                 raise ValueError(f"Time offset {t} is invalid; time offsets must be >= 0.0 hours.")

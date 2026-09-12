@@ -26,13 +26,14 @@ class ImpactLevel(str, Enum):
 
 class BuildingFootprint(BaseModel):
     """Building or critical infrastructure footprint representation."""
-    building_id: str = Field(..., description="Unique building or facility identifier")
-    name: Optional[str] = Field(None, description="Descriptive name (e.g. Civil Hospital, Community Center)")
+    building_id: str = Field(..., max_length=64, description="Unique building or facility identifier")
+    name: Optional[str] = Field(None, max_length=128, description="Descriptive name (e.g. Civil Hospital, Community Center)")
     building_type: Optional[str] = Field(
         default="general",
+        max_length=64,
         description="Facility type (e.g., hospital, school, shelter, residential, commercial)",
     )
-    zone_id: Optional[str] = Field(None, description="ID of the administrative ward/zone containing this building")
+    zone_id: Optional[str] = Field(None, max_length=64, description="ID of the administrative ward/zone containing this building")
     geometry: GeoJSONGeometry = Field(
         ...,
         description="GeoJSON geometry of the building (Point or Polygon)",
@@ -41,11 +42,12 @@ class BuildingFootprint(BaseModel):
 
 class WardZoneGeometry(BaseModel):
     """Administrative zone or ward geographic boundary."""
-    zone_id: str = Field(..., description="Unique zone identifier (e.g., ZONE-AHM-01)")
-    zone_name: str = Field(..., description="Human-readable zone name (e.g., Sabarmati Riverfront)")
+    zone_id: str = Field(..., max_length=64, description="Unique zone identifier (e.g., ZONE-AHM-01)")
+    zone_name: str = Field(..., max_length=128, description="Human-readable zone name (e.g., Sabarmati Riverfront)")
     total_area_sq_km: Optional[float] = Field(
         default=None,
         ge=0.0,
+        le=100_000.0,
         description="Total geographical area in sq km. If omitted or 0, calculated geometrically.",
     )
     geometry: GeoJSONGeometry = Field(
@@ -53,7 +55,7 @@ class WardZoneGeometry(BaseModel):
         description="GeoJSON Polygon or MultiPolygon representing the ward boundary",
     )
     population: Optional[int] = Field(
-        default=None, ge=0, description="Estimated population residing in the zone [DEMO DATA]"
+        default=None, ge=0, le=50_000_000, description="Estimated population residing in the zone [DEMO DATA]"
     )
 
 
@@ -111,17 +113,19 @@ class GISImpactSummary(BaseModel):
 
 class FloodImpactRequest(BaseModel):
     """Request payload for spatial flood impact assessment across zones and buildings."""
-    incident_id: str = Field(default="INC-FLOOD-GIS-001", description="Incident reference identifier")
+    incident_id: str = Field(default="INC-FLOOD-GIS-001", max_length=64, description="Incident reference identifier")
     flood_extent: Union[GeoJSONFeatureCollection, GeoJSONFeature, GeoJSONGeometry] = Field(
         ...,
         description="Detected flood extent vector layer (FeatureCollection, Feature, or Geometry)",
     )
     zones: List[WardZoneGeometry] = Field(
         ...,
+        max_length=500,
         description="List of city administrative ward/zone boundaries to analyze",
     )
     buildings: List[BuildingFootprint] = Field(
         default_factory=list,
+        max_length=5000,
         description="Optional list of building or critical facility footprints to intersect",
     )
 

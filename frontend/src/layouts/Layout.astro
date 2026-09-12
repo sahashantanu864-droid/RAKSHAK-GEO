@@ -9,13 +9,13 @@ const { title } = Astro.props;
 const pathname = Astro.url.pathname;
 
 const navLinks = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/simulation', label: 'What-If Simulation' },
-  { href: '/timeline', label: 'Timeline' },
+  { href: '/', label: 'GIS Command', shortLabel: 'GIS' },
+  { href: '/simulation', label: 'What-If Sim', shortLabel: 'Sim' },
+  { href: '/timeline', label: '48h Timeline', shortLabel: 'Timeline' },
 ];
 
 function isActive(href: string) {
-  if (href === '/') return pathname === '/';
+  if (href === '/') return pathname === '/' || pathname === '';
   return pathname.startsWith(href);
 }
 ---
@@ -24,69 +24,118 @@ function isActive(href: string) {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="CityShield GIS — RAKSHAK-GEO Flood Response Intelligence" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="CityShield GIS — RAKSHAK-GEO Flood Response Intelligence Command Center" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>🛡️</text></svg>" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <!-- Geist font via Vercel CDN -->
+
+    <!-- Security & Content-Security-Policy (Tailored for Leaflet, CartoDB, and ISRO Bhuvan) -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://unpkg.com https://bhuvan-vec1.nrsc.gov.in https://bhuvan-app3.nrsc.gov.in; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https:; frame-ancestors 'self';"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
   </head>
-  <body>
-    <!-- Navbar -->
-    <header class="fixed top-0 inset-x-0 z-50 bg-canvas/90 backdrop-blur border-b border-hairline">
-      <nav class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-        <!-- Logo -->
-        <a href="/" class="flex items-center gap-2.5 shrink-0">
-          <span class="text-base font-semibold text-ink tracking-tight">RAKSHAK<span class="text-mute font-normal">-GEO</span></span>
+  <body class="bg-canvas text-ink min-h-screen flex flex-col font-sans antialiased selection:bg-neutral-900 selection:text-white">
+    <!-- Top Command Navigation Bar (Touch-friendly & fully responsive) -->
+    <header class="fixed top-0 inset-x-0 z-50 bg-canvas-elevated/95 backdrop-blur-md border-b border-hairline shadow-xs">
+      <nav class="max-w-[1840px] mx-auto px-3 sm:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
+        <!-- Logo & Branding -->
+        <a href="/" class="flex items-center gap-2.5 shrink-0 group">
+          <div class="w-8 h-8 rounded-md bg-neutral-950 text-white flex items-center justify-center font-bold text-sm tracking-tighter shadow-xs">
+            RG
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm font-bold text-ink tracking-tight flex items-center gap-1.5">
+              <span>RAKSHAK-GEO</span>
+              <span class="text-[10px] font-mono font-normal px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-800 border border-hairline hidden xs:inline-block">
+                GIS CMD
+              </span>
+            </span>
+            <span class="text-[10px] font-mono text-mute -mt-0.5 hidden sm:block">Municipal Command</span>
+          </div>
         </a>
 
-        <!-- Nav links -->
-        <div class="flex items-center gap-1">
-          {navLinks.map(({ href, label }) => (
+        <!-- Operational Nav Links -->
+        <div class="flex items-center gap-1 bg-canvas p-0.5 sm:p-1 rounded-full border border-hairline overflow-x-auto">
+          {navLinks.map(({ href, label, shortLabel }) => (
             <a
               href={href}
               class={[
-                'px-3 py-1.5 text-sm rounded-full transition-colors',
+                'px-2.5 sm:px-3.5 py-1 text-xs font-mono rounded-full transition-all whitespace-nowrap',
                 isActive(href)
-                  ? 'text-ink font-medium bg-hairline-soft'
+                  ? 'bg-neutral-950 text-white font-semibold shadow-xs'
                   : 'text-body hover:text-ink hover:bg-hairline-soft',
               ].join(' ')}
             >
-              {label}
+              <span class="sm:inline hidden">{label}</span>
+              <span class="sm:hidden inline">{shortLabel}</span>
             </a>
           ))}
         </div>
 
-        <!-- Right pill -->
-        <div class="shrink-0">
-          <span class="text-xs font-mono text-mute px-2.5 py-1 border border-hairline rounded-full bg-canvas-elevated hidden sm:inline-flex">
-            v1.0-alpha
-          </span>
+        <!-- Right: Incident Badge & Protocol Status -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div class="hidden md:flex items-center gap-2 text-xs font-mono text-mute px-3 py-1 border border-hairline rounded-full bg-canvas">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <span>INCIDENT #2026-001</span>
+          </div>
+
+          <a
+            href="/api/v1/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[11px] font-mono text-mute hover:text-ink px-2.5 py-1 border border-hairline rounded-md hover:bg-hairline-soft transition-colors hidden sm:inline-flex items-center gap-1"
+          >
+            <span>API Docs</span>
+            <span>↗</span>
+          </a>
         </div>
       </nav>
     </header>
 
-    <!-- Page content with top-padding to clear the fixed nav -->
-    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-20 pb-16 min-h-screen">
+    <!-- Page Content (Maximized for 1920x1080 display while fully responsive for tablet and mobile) -->
+    <main class="max-w-[1840px] w-full mx-auto px-3 sm:px-6 lg:px-8 pt-18 pb-12 flex-1">
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-hairline bg-canvas">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-mute">
-        <div class="flex items-center gap-4">
-          <span>RAKSHAK-GEO</span>
-          <span class="text-hairline">·</span>
-          <span>CityShield GIS</span>
-          <span class="text-hairline">·</span>
-          <span>Phase 1 — T-019</span>
+    <footer class="border-t border-hairline bg-canvas-elevated">
+      <div class="max-w-[1840px] mx-auto px-3 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-mute font-mono">
+        <div class="flex items-center gap-3 text-center sm:text-left flex-wrap justify-center sm:justify-start">
+          <span class="font-semibold text-ink">RAKSHAK-GEO // CityShield GIS</span>
+          <span class="text-hairline hidden sm:inline">·</span>
+          <span>Ahmedabad Municipal Corporation Emergency Operations</span>
+          <span class="text-hairline hidden sm:inline">·</span>
+          <span>Sentinel-2 NDWI Pipeline</span>
         </div>
-        <div class="font-mono">FastAPI · Rasterio · Shapely · PostGIS</div>
+        <div class="flex items-center gap-3">
+          <span>FastAPI</span>
+          <span>·</span>
+          <span>PostGIS</span>
+          <span>·</span>
+          <span>ISRO Bhuvan</span>
+          <span>·</span>
+          <span>Leaflet</span>
+        </div>
       </div>
     </footer>
   </body>
