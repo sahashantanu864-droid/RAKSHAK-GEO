@@ -9,7 +9,7 @@ type ResourceKey = 'ambulances' | 'rescue_boats' | 'medical_kits' | 'food_packet
 interface ResourceDef {
   key: ResourceKey;
   label: string;
-  icon: string;
+  code: string;
   unit: string;
   defaultStockpile: number;
   totalDemand: number;
@@ -20,7 +20,7 @@ const RESOURCE_DEFS: ResourceDef[] = [
   {
     key: 'ambulances',
     label: 'ALS Ambulances',
-    icon: '🚑',
+    code: 'AMB',
     unit: 'Units',
     defaultStockpile: 15,
     totalDemand: 25,
@@ -29,7 +29,7 @@ const RESOURCE_DEFS: ResourceDef[] = [
   {
     key: 'rescue_boats',
     label: 'Inflatable Rescue Boats',
-    icon: '🚤',
+    code: 'BOAT',
     unit: 'Crafts',
     defaultStockpile: 6,
     totalDemand: 12,
@@ -38,7 +38,7 @@ const RESOURCE_DEFS: ResourceDef[] = [
   {
     key: 'medical_kits',
     label: 'Trauma Medical Kits',
-    icon: '🩹',
+    code: 'MED',
     unit: 'Kits',
     defaultStockpile: 600,
     totalDemand: 1000,
@@ -47,7 +47,7 @@ const RESOURCE_DEFS: ResourceDef[] = [
   {
     key: 'food_packets',
     label: 'Ration Food Packs',
-    icon: '📦',
+    code: 'RATION',
     unit: 'Packs',
     defaultStockpile: 3000,
     totalDemand: 5000,
@@ -56,7 +56,7 @@ const RESOURCE_DEFS: ResourceDef[] = [
   {
     key: 'personnel',
     label: 'Emergency Responders',
-    icon: '🦺',
+    code: 'PERS',
     unit: 'Officers',
     defaultStockpile: 80,
     totalDemand: 120,
@@ -369,7 +369,7 @@ export const Simulation: React.FC = () => {
                   <div key={res.key} className="space-y-1.5 p-2 rounded bg-canvas border border-hairline-soft">
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="font-semibold text-ink flex items-center gap-1.5">
-                        <span>{res.icon}</span>
+                        <span className="px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-700 border border-hairline font-mono text-[9px] font-bold">{res.code}</span>
                         <span>{res.label}</span>
                       </span>
                       <span className="font-bold text-ink">
@@ -566,7 +566,7 @@ export const Simulation: React.FC = () => {
                         {/* Quantities Dispatched */}
                         <div className="grid grid-cols-4 gap-1.5 text-center text-[10px] font-mono pt-1">
                           <div className="p-1 rounded bg-canvas-elevated border border-hairline-soft">
-                            <div className="text-mute">🚑 Amb</div>
+                            <div className="text-mute font-medium">Amb</div>
                             <div className="font-bold text-ink">
                               {zc.simulated_allocated?.ambulances ?? 0}{' '}
                               <span className="text-[9px] text-mute">
@@ -575,7 +575,7 @@ export const Simulation: React.FC = () => {
                             </div>
                           </div>
                           <div className="p-1 rounded bg-canvas-elevated border border-hairline-soft">
-                            <div className="text-mute">🚤 Boats</div>
+                            <div className="text-mute font-medium">Boats</div>
                             <div className="font-bold text-ink">
                               {zc.simulated_allocated?.rescue_boats ?? 0}{' '}
                               <span className="text-[9px] text-mute">
@@ -584,13 +584,13 @@ export const Simulation: React.FC = () => {
                             </div>
                           </div>
                           <div className="p-1 rounded bg-canvas-elevated border border-hairline-soft">
-                            <div className="text-mute">📦 Packs</div>
+                            <div className="text-mute font-medium">Packs</div>
                             <div className="font-bold text-ink">
                               {zc.simulated_allocated?.food_packets ?? 0}
                             </div>
                           </div>
                           <div className="p-1 rounded bg-canvas-elevated border border-hairline-soft">
-                            <div className="text-mute">🩹 Kits</div>
+                            <div className="text-mute font-medium">Kits</div>
                             <div className="font-bold text-ink">
                               {zc.simulated_allocated?.medical_kits ?? 0}
                             </div>
@@ -615,7 +615,12 @@ export const Simulation: React.FC = () => {
           ) : (
             /* Empty state prior to initial run */
             <Card className="h-[480px] border border-dashed border-hairline flex flex-col items-center justify-center text-center p-8 bg-canvas">
-              <div className="text-4xl mb-3">⚡</div>
+              <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-700 mb-3">
+                <svg className="w-6 h-6 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                </svg>
+              </div>
               <h3 className="font-bold text-sm text-ink mb-1">Interactive Decision Model Ready</h3>
               <p className="text-xs text-mute max-w-sm leading-relaxed mb-4">
                 Select a tactical preset on the left or customize available ambulances, boats, and medical kits, then click{' '}

@@ -386,9 +386,8 @@ export const Timeline: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-hairline-soft text-body">
                   <tr>
-                    <td className="py-2.5 px-3 font-semibold text-ink flex items-center gap-1.5">
-                      <span>🚑</span>
-                      <span>ALS Ambulances</span>
+                    <td className="py-2.5 px-3 font-semibold text-ink">
+                      ALS Ambulances
                     </td>
                     <td className={`py-2.5 px-3 font-bold ${currentStep.unmetGapUnits.ambulances > 0 ? 'text-red-600' : 'text-link'}`}>
                       {currentStep.unmetGapUnits.ambulances > 0 ? `+${currentStep.unmetGapUnits.ambulances} units` : 'Zero Deficit'}
@@ -399,9 +398,8 @@ export const Timeline: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="py-2.5 px-3 font-semibold text-ink flex items-center gap-1.5">
-                      <span>🚤</span>
-                      <span>Inflatable Rescue Boats</span>
+                    <td className="py-2.5 px-3 font-semibold text-ink">
+                      Inflatable Rescue Boats
                     </td>
                     <td className={`py-2.5 px-3 font-bold ${currentStep.unmetGapUnits.rescue_boats > 0 ? 'text-red-600' : 'text-link'}`}>
                       {currentStep.unmetGapUnits.rescue_boats > 0 ? `+${currentStep.unmetGapUnits.rescue_boats} crafts` : 'Zero Deficit'}
@@ -412,9 +410,8 @@ export const Timeline: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="py-2.5 px-3 font-semibold text-ink flex items-center gap-1.5">
-                      <span>📦</span>
-                      <span>Food Ration Packs</span>
+                    <td className="py-2.5 px-3 font-semibold text-ink">
+                      Food Ration Packs
                     </td>
                     <td className={`py-2.5 px-3 font-bold ${currentStep.unmetGapUnits.food_packets > 0 ? 'text-amber-700' : 'text-link'}`}>
                       {currentStep.unmetGapUnits.food_packets > 0 ? `+${currentStep.unmetGapUnits.food_packets} packs` : 'Zero Deficit'}
@@ -425,9 +422,8 @@ export const Timeline: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="py-2.5 px-3 font-semibold text-ink flex items-center gap-1.5">
-                      <span>🩹</span>
-                      <span>Trauma Medical Kits</span>
+                    <td className="py-2.5 px-3 font-semibold text-ink">
+                      Trauma Medical Kits
                     </td>
                     <td className={`py-2.5 px-3 font-bold ${currentStep.unmetGapUnits.medical_kits > 0 ? 'text-amber-700' : 'text-link'}`}>
                       {currentStep.unmetGapUnits.medical_kits > 0 ? `+${currentStep.unmetGapUnits.medical_kits} kits` : 'Zero Deficit'}
@@ -438,9 +434,8 @@ export const Timeline: React.FC = () => {
                   </tr>
 
                   <tr>
-                    <td className="py-2.5 px-3 font-semibold text-ink flex items-center gap-1.5">
-                      <span>🦺</span>
-                      <span>Emergency Personnel</span>
+                    <td className="py-2.5 px-3 font-semibold text-ink">
+                      Emergency Personnel
                     </td>
                     <td className={`py-2.5 px-3 font-bold ${currentStep.unmetGapUnits.personnel > 0 ? 'text-red-600' : 'text-link'}`}>
                       {currentStep.unmetGapUnits.personnel > 0 ? `+${currentStep.unmetGapUnits.personnel} staff` : 'Zero Deficit'}

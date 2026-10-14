@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import CopilotChat from '../components/CopilotChat';
+
 
 interface Props {
   title: string;
@@ -26,7 +28,7 @@ function isActive(href: string) {
     <meta charset="UTF-8" />
     <meta name="description" content="CityShield GIS — RAKSHAK-GEO Flood Response Intelligence Command Center" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>🛡️</text></svg>" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%230f172a' stroke-width='2.5'><path d='M16 3L4 8v8c0 8.5 5.5 13.5 12 15 6.5-1.5 12-6.5 12-15V8L16 3z' fill='%230f172a'/><path d='M16 7L8 10.5v5.5c0 6 3.8 9.5 8 10.5 4.2-1 8-4.5 8-10.5V10.5L16 7z' fill='%23ffffff'/></svg>" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
@@ -138,5 +140,7 @@ function isActive(href: string) {
         </div>
       </div>
     </footer>
+    <!-- Copilot AI Chat Widget -->
+    <CopilotChat client:load />
   </body>
 </html>

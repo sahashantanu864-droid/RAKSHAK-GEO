@@ -1,5 +1,7 @@
 """Application configuration settings."""
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from typing import List
 from pydantic import BaseModel, Field
 
@@ -50,6 +52,9 @@ class Settings(BaseModel):
         "https://bhuvan-vec1.nrsc.gov.in/bhuvan/gwc/service/wms",
     )
     ISRO_BHUVAN_LAYER: str = os.getenv("ISRO_BHUVAN_LAYER", "india3")
+
+    # LLM Copilot Configuration
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
     @property
     def is_production(self) -> bool:

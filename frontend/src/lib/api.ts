@@ -191,3 +191,19 @@ export async function fetchISROStatus(): Promise<any> {
 export function getISROWmsUrl(): string {
   return `${getBackendBaseUrl()}/api/v1/gis/isro/wms`;
 }
+
+/**
+ * LLM Copilot Chat
+ */
+export async function sendCopilotMessage(messages: {role: string, content: string}[], contextType: string = 'general') {
+  const res = await fetch(`${getBackendBaseUrl()}/api/v1/copilot/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, context_type: contextType }),
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Copilot chat error (${res.status}): ${errorText}`);
+  }
+  return res.json();
+}

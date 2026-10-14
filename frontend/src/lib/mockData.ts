@@ -538,7 +538,7 @@ export const FLOOD_INCIDENTS: FloodIncident[] = [
     alerts: MOCK_ALERTS,
   },
   {
-    // ⚠️  DEMO DATA — Not backed by real backend dataset
+    // DEMO DATA — Not backed by real backend dataset
     incident_id: 'DEMO-SRT-FLOOD-2026-001',
     name: 'Surat-Tapi Basin Flood Monitoring',
     short_label: 'Surat / Tapi River',
@@ -615,7 +615,7 @@ export const FLOOD_INCIDENTS: FloodIncident[] = [
     })),
   },
   {
-    // ⚠️  DEMO DATA — Not backed by real backend dataset
+    // DEMO DATA — Not backed by real backend dataset
     incident_id: 'DEMO-MUM-FLOOD-2026-001',
     name: 'Mumbai Urban Flash Flood — Monitoring',
     short_label: 'Mumbai / Coastal',

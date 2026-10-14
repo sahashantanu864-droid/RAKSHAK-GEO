@@ -274,7 +274,11 @@ export const Dashboard: React.FC = () => {
                 />
               ) : (
                 <Card className="h-full flex flex-col items-center justify-center text-center p-8 border-dashed">
-                  <div className="text-3xl mb-2">🗺️</div>
+                  <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 mb-2">
+                    <svg className="w-5 h-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.31a2.25 2.25 0 00-2.012 0L2.616 5.748A1.125 1.125 0 002 6.754v11.926c0 .836.88 1.38 1.628 1.006l3.869-1.934a2.25 2.25 0 012.012 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                    </svg>
+                  </div>
                   <h4 className="font-semibold text-sm text-ink mb-1">No Zone Selected</h4>
                   <p className="text-xs text-mute max-w-xs leading-relaxed">
                     Click any ward polygon on the GIS map to inspect inundated areas, affected population, facilities, and response gaps.

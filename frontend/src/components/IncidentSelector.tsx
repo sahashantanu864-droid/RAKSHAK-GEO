@@ -219,11 +219,11 @@ export const IncidentSelector: React.FC<IncidentSelectorProps> = ({
                       </span>
                       {inc.is_real_backend_dataset ? (
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-widest bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          ✓ LIVE DATA
+                          LIVE DATA
                         </span>
                       ) : (
                         <span className="px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-widest bg-neutral-100 text-neutral-500 border border-neutral-200">
-                          ⚠ DEMO
+                          DEMO DATA
                         </span>
                       )}
                     </div>
@@ -262,7 +262,7 @@ export const IncidentSelector: React.FC<IncidentSelectorProps> = ({
               }}
               className="text-[10px] font-mono text-mute hover:text-ink transition-colors cursor-pointer"
             >
-              Close ✕
+              Close
             </button>
           </div>
         </div>

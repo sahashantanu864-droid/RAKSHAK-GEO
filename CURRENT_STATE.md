@@ -131,9 +131,14 @@ Status:
   - Endpoints: `POST /api/v1/flood-response/analyze`, `GET /api/v1/flood-response/sample-payload`
   - Seamlessly chains: Flood Extent Vector -> GIS Spatial Intersection -> Dynamic Zone Response Gap -> Resource Optimization Dispatch
   - Reuses `GISFloodImpactService` and `ResourceOptimizationService` directly without logic duplication
+- **T-020 LLM Copilot Integration**: OPERATIONAL
+  - Endpoints: `POST /api/v1/copilot/chat`
+  - Services & Schemas: `CopilotService` (`backend/app/services/copilot_service.py`), `ChatRequest`, `ChatMessage`, `ChatResponse` (`backend/app/schemas/copilot.py`)
+  - Supports domain context injection ('general', 'optimization', 'timeline') and offline fallback mode
 
 ### Test Suite
-- Total Tests: **162/162 PASSED, 0 FAILURES** across all repository test suites
+- Total Tests: **178/178 PASSED, 0 FAILURES** across all repository test suites
+  - `test_copilot.py`: 5/5 PASSED (T-020 Copilot Service & API)
   - `test_response_gap_timeline.py`: 29/29 PASSED (Step 6 timeline foundation)
   - `test_flood_extent.py`: 45/45 PASSED (Step 5 flood extent extraction)
   - `test_permanent_water_masker.py`: 12/12 PASSED (Step 4 permanent water masking)
@@ -144,6 +149,7 @@ Status:
   - `test_what_if_engine.py`: 11/11 PASSED (T-015 simulation)
   - `test_optimization_engine.py`, `test_optimization_foundation.py`: 14/14 PASSED (T-014 optimization)
   - `test_city_gis_foundation.py`: 4/4 PASSED (T-019 City GIS data)
+  - `test_security_hardening.py`: 11/11 PASSED (Security Hardening)
 
 ### Data & Contracts
 - Resource Quantities: ambulances, rescue boats, food packets, medical kits, personnel, custom items

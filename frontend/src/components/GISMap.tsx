@@ -339,8 +339,10 @@ export const GISMap: React.FC<GISMapProps> = ({
             className: 'custom-map-pin',
             html: `
               <div class="relative group cursor-pointer">
-                <div class="w-7 h-7 rounded-full bg-white border-2 ${isIngress ? 'border-red-600 animate-pulse' : 'border-neutral-900'} shadow-md flex items-center justify-center text-xs">
-                  🏥
+                <div class="w-7 h-7 rounded-full bg-white border-2 ${isIngress ? 'border-red-600 animate-pulse' : 'border-neutral-900'} shadow-md flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 10.5h-5.5V5h-3v5.5H5v3h5.5V19h3v-5.5H19v-3z"/>
+                  </svg>
                 </div>
                 ${isIngress ? '<span class="absolute -top-1 -right-1 flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span></span>' : ''}
               </div>
@@ -372,8 +374,10 @@ export const GISMap: React.FC<GISMapProps> = ({
             className: 'custom-map-pin',
             html: `
               <div class="relative group cursor-pointer">
-                <div class="w-7 h-7 rounded-full bg-white border-2 ${isNearCap ? 'border-amber-600' : 'border-blue-600'} shadow-md flex items-center justify-center text-xs">
-                  ⛺
+                <div class="w-7 h-7 rounded-full bg-white border-2 ${isNearCap ? 'border-amber-600' : 'border-blue-600'} shadow-md flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/>
+                  </svg>
                 </div>
               </div>
             `,
@@ -393,8 +397,8 @@ export const GISMap: React.FC<GISMapProps> = ({
                 </div>
               </div>
               <div class="mt-1.5 text-[11px] text-mute flex items-center gap-2">
-                <span>⚡ Generator: ${shelter.has_generator ? 'Yes' : 'No'}</span>
-                <span>💧 Potable: ${(shelter.potable_water_liters / 1000).toFixed(1)}kL</span>
+                <span>Generator: ${shelter.has_generator ? 'Yes' : 'No'}</span>
+                <span>Water: ${(shelter.potable_water_liters / 1000).toFixed(1)}kL</span>
               </div>
             </div>
           `);
@@ -411,14 +415,14 @@ export const GISMap: React.FC<GISMapProps> = ({
         units.forEach((unit) => {
           const isBoat = unit.type === 'RESCUE_BOAT';
           const isTeam = unit.type === 'NDRF_TEAM';
-          const iconSymbol = isBoat ? '🚤' : isTeam ? '🦺' : '🚑';
+          const unitTag = isBoat ? 'BOAT' : isTeam ? 'NDRF' : 'EMS';
 
           const icon = L.divIcon({
             className: 'custom-map-pin',
             html: `
               <div class="relative group cursor-pointer">
-                <div class="w-6 h-6 rounded-full bg-neutral-900 text-white border border-neutral-700 shadow flex items-center justify-center text-[10px]">
-                  ${iconSymbol}
+                <div class="w-6 h-6 rounded-full bg-neutral-900 text-white border border-neutral-700 shadow flex items-center justify-center text-[7px] font-mono font-bold tracking-tighter">
+                  ${unitTag}
                 </div>
               </div>
             `,
@@ -672,7 +676,7 @@ export const GISMap: React.FC<GISMapProps> = ({
           </div>
           <div className="text-[9px] text-mute flex items-center justify-between pt-0.5 border-t border-hairline">
             <span>Area: {incidentName}</span>
-            <span>{isRealBackendDataset ? '✓ LIVE' : '⚠ DEMO'}</span>
+            <span className="font-semibold">{isRealBackendDataset ? 'LIVE' : 'DEMO DATA'}</span>
           </div>
         </div>
       </div>
@@ -690,7 +694,7 @@ export const GISMap: React.FC<GISMapProps> = ({
             </>
           ) : (
             <>
-              <span className="text-mute">💡 Click any zone on the map to inspect granular impact and response gaps</span>
+              <span className="text-mute">Click any zone on the map to inspect granular impact and response gaps</span>
             </>
           )}
         </div>

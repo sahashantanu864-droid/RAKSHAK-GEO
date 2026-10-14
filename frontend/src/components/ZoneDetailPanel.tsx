@@ -41,10 +41,12 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="text-mute hover:text-ink p-1 rounded-md hover:bg-hairline-soft cursor-pointer text-sm font-mono"
+          className="text-mute hover:text-ink p-1 rounded-md hover:bg-hairline-soft cursor-pointer text-sm font-mono flex items-center justify-center"
           title="Close panel"
         >
-          ✕
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
@@ -109,7 +111,7 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
               </thead>
               <tbody className="divide-y divide-hairline-soft text-[11px]">
                 <tr>
-                  <td className="py-1.5 px-2 font-medium text-ink">🚑 Ambulances</td>
+                  <td className="py-1.5 px-2 font-medium text-ink">Ambulances</td>
                   <td className="py-1.5 px-2 text-body">{zone.demand.ambulances}</td>
                   <td className="py-1.5 px-2 text-body">{zone.local_capacity.ambulances}</td>
                   <td className={`py-1.5 px-2 text-right font-bold ${zone.unmet_gap.ambulances > 0 ? 'text-red-600' : 'text-link'}`}>
@@ -117,7 +119,7 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-2 font-medium text-ink">🚤 Rescue Boats</td>
+                  <td className="py-1.5 px-2 font-medium text-ink">Rescue Boats</td>
                   <td className="py-1.5 px-2 text-body">{zone.demand.rescue_boats}</td>
                   <td className="py-1.5 px-2 text-body">{zone.local_capacity.rescue_boats}</td>
                   <td className={`py-1.5 px-2 text-right font-bold ${zone.unmet_gap.rescue_boats > 0 ? 'text-red-600' : 'text-link'}`}>
@@ -125,7 +127,7 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-2 font-medium text-ink">📦 Food Packets</td>
+                  <td className="py-1.5 px-2 font-medium text-ink">Food Packets</td>
                   <td className="py-1.5 px-2 text-body">{zone.demand.food_packets}</td>
                   <td className="py-1.5 px-2 text-body">{zone.local_capacity.food_packets}</td>
                   <td className={`py-1.5 px-2 text-right font-bold ${zone.unmet_gap.food_packets > 0 ? 'text-amber-700' : 'text-link'}`}>
@@ -133,7 +135,7 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-2 font-medium text-ink">🩹 Medical Kits</td>
+                  <td className="py-1.5 px-2 font-medium text-ink">Medical Kits</td>
                   <td className="py-1.5 px-2 text-body">{zone.demand.medical_kits}</td>
                   <td className="py-1.5 px-2 text-body">{zone.local_capacity.medical_kits}</td>
                   <td className={`py-1.5 px-2 text-right font-bold ${zone.unmet_gap.medical_kits > 0 ? 'text-amber-700' : 'text-link'}`}>
@@ -141,7 +143,7 @@ export const ZoneDetailPanel: React.FC<ZoneDetailPanelProps> = ({
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-2 font-medium text-ink">🦺 Personnel</td>
+                  <td className="py-1.5 px-2 font-medium text-ink">Personnel</td>
                   <td className="py-1.5 px-2 text-body">{zone.demand.personnel}</td>
                   <td className="py-1.5 px-2 text-body">{zone.local_capacity.personnel}</td>
                   <td className={`py-1.5 px-2 text-right font-bold ${zone.unmet_gap.personnel > 0 ? 'text-red-600' : 'text-link'}`}>
