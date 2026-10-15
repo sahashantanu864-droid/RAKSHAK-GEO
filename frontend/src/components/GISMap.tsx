@@ -118,10 +118,10 @@ export const GISMap: React.FC<GISMapProps> = ({
         attributionControl: false,
       });
 
-      // Base CartoDB Positron layer
-      const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      // Standard OpenStreetMap base layer (100% free, no API key required, crisp and reliable)
+      const baseLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
       layersRef.current.baseMap = baseLayer;
 
@@ -555,7 +555,7 @@ export const GISMap: React.FC<GISMapProps> = ({
                 }
                 className="rounded text-primary focus:ring-link h-3 w-3"
               />
-              <span>Carto Base</span>
+              <span>Street Map</span>
             </label>
 
             {/* ISRO Bhuvan Satellite Layer Toggle */}

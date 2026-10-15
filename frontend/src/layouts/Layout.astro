@@ -32,10 +32,10 @@ function isActive(href: string) {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
 
-    <!-- Security & Content-Security-Policy (Tailored for Leaflet, CartoDB, and ISRO Bhuvan) -->
+    <!-- Security & Content-Security-Policy (Tailored for Leaflet, OpenStreetMap, ESRI, and ISRO Bhuvan) -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.basemaps.cartocdn.com https://unpkg.com https://bhuvan-vec1.nrsc.gov.in https://bhuvan-app3.nrsc.gov.in; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https:; frame-ancestors 'self';"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://services.arcgisonline.com https://unpkg.com https://bhuvan-vec1.nrsc.gov.in https://bhuvan-app3.nrsc.gov.in; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https:; frame-ancestors 'self';"
     />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
